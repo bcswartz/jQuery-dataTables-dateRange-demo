@@ -1,0 +1,17 @@
+#theadRow > th > span {margin-right:2em;display:block;}
+
+.hideElement {
+    display:none;
+}
+
+input.datepicker {
+    width:7em;
+}
+
+div.dateControlBlock {
+    float:right;
+}
+
+#endBlock {
+    height:5ex;
+}

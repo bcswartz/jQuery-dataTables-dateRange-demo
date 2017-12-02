@@ -1,0 +1,144 @@
+---
+layout: default
+---
+
+<!---Load the styles for the table.  This stylesheet points to the images used in the table controls--->
+<link rel="stylesheet" type="text/css" href="assets/css/dataTableStyles.css" />
+<!---Load the CSS to be used by the jQuery UI Datepicker--->
+<link type="text/css" href="assets/jquery-ui-1.8.4.custom/css/blitzer/jquery-ui-1.8.4.custom.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="assets/css/demoStyles.css" />
+
+<p>This page serves as a demonstration of one way you can add date range filtering controls to a table already enhanced by the <a href="http://www.datatables.net/index" target="_blank">dataTables jQuery plugin</a>.  Use the date range controls to filter out some of the dates included in the table.  The date controls themselves utilize the <a href="http://jqueryui.com/demos/datepicker/">jQuery UI Datepicker</a> plugin.</p>
+
+<p>For more information on the specific dataTables function used to add the additional filtering method, visit: <a href="http://www.datatables.net/plug-ins/filtering" target="_blank">http://www.datatables.net/plug-ins/filtering</a>.</p>
+
+<p>Please view the source code to see what's going on under the hood:  I documented it with comments to help explain.</p>
+
+<div id="baseDateControl">
+    <div class="dateControlBlock">
+        Between <input type="text" name="dateStart" id="dateStart" class="datepicker" value="09/01/2010" size="8" /> and
+        <input type="text" name="dateEnd" id="dateEnd" class="datepicker" value="12/31/2010" size="8"/>
+    </div>
+</div>
+
+<table id="commentTable" class="dataTablesTable" border="1" cellpadding="2" cellspacing="2" width="100%">
+    <thead>
+    <tr id="theadRow">
+        <th><span>Date Submitted</span></th>
+        <th><span>Commenter</span></th>
+        <th width="60%"><span>Comment</span></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>09/05/2010</td>
+        <td>Donald Justice</td>
+        <td>I'm really a big fan of the dataTables jQuery plugin.  It's simple to set up for basic
+            table management yet provides you with the flexibility to do more complex tasks.</td>
+    </tr>
+    <tr>
+        <td>09/20/2010</td>
+        <td>Walter Fowler</td>
+        <td>It never ceases to amaze me how easy it can be to build solid user interfaces when you have the right tools at your disposal.</td>
+    </tr>
+    <tr>
+        <td>10/13/2010</td>
+        <td>Ferris Butler</td>
+        <td>I'm definitely going to check out this plugin.</td>
+    </tr>
+    <tr>
+        <td>10/29/2010</td>
+        <td>Lonnie Belfort</td>
+        <td>Does anyone know if there's a way to configure dataTables so that it'll retain the current table state (the filter, the sorting) if you move to another page then come back to it?</td>
+    </tr>
+    <tr>
+        <td>11/05/2010</td>
+        <td>George Park</td>
+        <td>Lonnie:  Yes, there is a bStateSave boolean setting you can set to true to do that.  It'll then save the current state of the table in a cookie.</td>
+    </tr>
+    <tr>
+        <td>12/06/2010</td>
+        <td>Lonnie Belfort</td>
+        <td>Hey, George, thanks for the info!</td>
+    </tr>
+    </tbody>
+</table>
+
+<div id="endBlock"></div>
+
+<!---Load jQuery--->
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"></script>
+<!---Load a custom jQuery UI script to power the Datepicker widget--->
+<script type="text/javascript" src="assets/jquery-ui-1.8.4.custom/js/jquery-ui-1.8.4.custom.min.js"></script>
+<!---Load the dataTables jQuery plugin--->
+<script type="text/javascript" src="assets/DataTables-1.7.4/media/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript">
+
+    // The plugin function for adding a new filtering routine
+    $.fn.dataTableExt.afnFiltering.push(
+        function(oSettings, aData, iDataIndex){
+            var dateStart = parseDateValue($("#dateStart").val());
+            var dateEnd = parseDateValue($("#dateEnd").val());
+            // aData represents the table structure as an array of columns, so the script access the date value
+            // in the first column of the table via aData[0]
+            var evalDate= parseDateValue(aData[0]);
+
+            if (evalDate >= dateStart && evalDate <= dateEnd) {
+                return true;
+            }
+            else {
+                return false;
+            }
+
+        });
+
+    // Function for converting a mm/dd/yyyy date value into a numeric string for comparison (example 08/12/2010 becomes 20100812
+    function parseDateValue(rawDate) {
+        var dateArray= rawDate.split("/");
+        var parsedDate= dateArray[2] + dateArray[0] + dateArray[1];
+        return parsedDate;
+    }
+
+
+    $(function() {
+        // Implements the dataTables plugin on the HTML table
+        var $dTable= $("table.dataTablesTable").dataTable( {
+            "iDisplayLength": 200,
+            "bStateSave": false,
+            "oLanguage": {
+                "sLengthMenu": 'Show <select><option value="25">25</option><option value="50">50</option><option value="100">100</option><option value="200">200</option></select> entries'
+            },
+            "aaSorting": [[0,'asc']],
+            "aoColumns": [
+                { "sType": "date" },
+                null,
+                null
+            ]
+        });
+
+        // The dataTables plugin creates the filtering and pagination controls for the table dynamically, so these
+        // lines will clone the date range controls currently hidden in the baseDateControl div and append them to
+        // the feedbackTable_filter block created by dataTables
+        // $dateControls= $("#baseDateControl").children("div").clone();
+        // $("#feedbackTable_filter").prepend($dateControls);
+
+        // Implements the jQuery UI Datepicker widget on the date controls
+        $('.datepicker').datepicker(
+            {showOn: 'button', buttonImage: '/thoughts/demos/dataTablesDateRange/images/datePicker/calendar.gif', buttonImageOnly: true}
+        );
+
+        // Create event listeners that will filter the table whenever the user types in either date range box or
+        // changes the value of either box using the Datepicker pop-up calendar
+        $("#dateStart").keyup ( function() { $dTable.fnDraw(); } );
+        $("#dateStart").change( function() { $dTable.fnDraw(); } );
+        $("#dateEnd").keyup ( function() { $dTable.fnDraw(); } );
+        $("#dateEnd").change( function() { $dTable.fnDraw(); } );
+
+    });
+
+</script>
+
+
+
+
+
