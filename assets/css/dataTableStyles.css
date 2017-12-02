@@ -46,6 +46,7 @@
 
 .paginate_disabled_previous {
     background-image: url('../images/back_disabled.jpg');
+    margin-top: 5px !important;
 }
 
 .paginate_enabled_previous {
